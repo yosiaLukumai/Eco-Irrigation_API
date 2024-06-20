@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>afm_technologies</title>
+    <style>
+        html,
+        body {
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .main-wrapper {
+            height: auto;
+            width: auto;
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 400px;
+            overflow: hidden;
+        }
+
+        .help {
+            width: 100%;
+            text-align: center;
+        }
+
+        .help2 {
+            align-items: center;
+            justify-content: center;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+        }
+    </style>
+</head>
+
+<body style="background-color: #f9faff; padding: 2rem;">
+    <div class="main-wrapper" style="overflow: hidden; ">
+        <div class="help" style="padding: 0 20px;">
+            <div
+                style="background-color: white; position: relative; z-index: 9999; border-radius: 1.2rem; box-shadow: 15px 15px 10px #a515158f; border: 0.4px solid rgba(128, 128, 128, 0.486);">
+                <div class="help2">
+                    <div
+                        style="font-size: 1.4rem; border-radius: 1.2rem 1.2rem 0 0; font-weight: bold; padding: 0.6rem 0; color: white; background-color:#396ff9;">
+                        {{.AppName}}
+                    </div>
+
+                    <div style="padding: 3.4rem 0 0 0;">
+                        <div>
+                            <div
+                                style="margin: 0 auto; font-size: 1.2rem; font-weight: bold; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;">
+                                Hi.
+                                <div style="color: #f72585; padding-left: 0.3rem;">{{.Name}}</div>
+
+                            </div>
+                            <div
+                                style=" padding: 1rem 0.7rem; font-size: 1rem; font-weight: lighter; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;">
+                                Welcome aboard. Just take this time to Verify your email. Just this small steps to
+                                skyrocket
+                                your tech need.
+                            </div>
+
+                        </div>
+                        <div
+                            style="max-width: 220px; margin: 0 auto; padding: 0.7rem 0.2rem; border-radius: 12px; text-decoration: none; background-color:#396ff9;">
+                            <a href="{{.VerifyLink}}"
+                                style=" text-decoration: none; color: white; font-size: 1.1rem; font-weight: bold; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;">
+                                Verify your Email
+                            </a>
+                        </div>
+
+                        <div style="padding: 1.4rem 1.2rem 0 1.2rem;">
+                            <div style="opacity: 0.78; text-align: center; padding: 0.7rem 0; font-size: 0.8rem;">
+                                You’re receiving this email because you (or someone using your email address) requested
+                                to
+                                signup
+                                to the AFM_Technology. If you did not make this request, you can ignore this email.
+                            </div>
+                        </div>
+
+                        <div style="padding: 0 0 1.2rem 0;">
+                            <div
+                                style="padding: 0.3rem 0; font-size: 0.9rem; font-weight: bold; color: #3a0ca3; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                &copy;{{.Year}} <a href="https://afmtechnologies.co.tz" target="_blank"
+                                    style="text-decoration: none;"> afm_technologies. </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>

@@ -1,0 +1,300 @@
+[
+  {
+    $match: {
+      company: ObjectId(
+        "662508f2280858f55545e894"
+      ),
+    },
+  },
+  {
+    $lookup:
+      /**
+       * from: The target collection.
+       * localField: The local join field.
+       * foreignField: The target join field.
+       * as: The name for the results.
+       * pipeline: Optional pipeline to run on the foreign collection.
+       * let: Optional variables to use in the pipeline field stages.
+       */
+      {
+        from: "branch",
+        localField: "branch",
+        foreignField: "_id",
+        as: "branchInfo",
+      },
+  },
+  {
+    $unwind:
+      /**
+       * path: Path to the array field.
+       * includeArrayIndex: Optional name for index.
+       * preserveNullAndEmptyArrays: Optional
+       *   toggle to unwind null and empty values.
+       */
+      {
+        path: "$branchInfo",
+      },
+  },
+  {
+    $project:
+      /**
+       * specifications: The fields to
+       *   include or exclude.
+       */
+      {
+        branchName: "$branchInfo.name",
+        amount: 1,
+        serialno: 1,
+        status: {
+          $cond: [
+            "$status",
+            "active",
+            "not-active",
+          ],
+        },
+        assigned: {
+          $cond: [
+            "$assigned",
+            "assigned",
+            "not-assigned",
+          ],
+        },
+      },
+  },
+  {
+    $skip: 1,
+  },
+  {
+    $limit:1,
+  },
+]
+
+
+// bson.A{
+//     bson.D{
+//         {"$facet",
+//             bson.D{
+//                 {"data",
+//                     bson.A{
+//                         bson.D{{"$match", bson.D{{"company", objectIDFromHex("662b78629aacfc9958b2c8ad")}}}},
+//                         bson.D{
+//                             {"$lookup",
+//                                 bson.D{
+//                                     {"from", "branch"},
+//                                     {"localField", "branch"},
+//                                     {"foreignField", "_id"},
+//                                     {"as", "branchInfo"},
+//                                 },
+//                             },
+//                         },
+//                         bson.D{{"$unwind", bson.D{{"path", "$branchInfo"}}}},
+//                         bson.D{
+//                             {"$project",
+//                                 bson.D{
+//                                     {"branchName", "$branchInfo.name"},
+//                                     {"amount", 1},
+//                                     {"serialno", 1},
+//                                     {"status",
+//                                         bson.D{
+//                                             {"$cond",
+//                                                 bson.A{
+//                                                     "$status",
+//                                                     "active",
+//                                                     "not-active",
+//                                                 },
+//                                             },
+//                                         },
+//                                     },
+//                                     {"assigned",
+//                                         bson.D{
+//                                             {"$cond",
+//                                                 bson.A{
+//                                                     "$assigned",
+//                                                     "assigned",
+//                                                     "not-assigned",
+//                                                 },
+//                                             },
+//                                         },
+//                                     },
+//                                 },
+//                             },
+//                         },
+//                         bson.D{{"$skip", 0}},
+//                         bson.D{{"$limit", 2}},
+//                     },
+//                 },
+//                 {"count",
+//                     bson.A{
+//                         bson.D{{"$count", "count"}},
+//                     },
+//                 },
+//             },
+//         },
+//     },
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+[
+  {
+    $facet: {
+      data: [
+        {
+          $match: {
+            company: ObjectId(
+              "662b78629aacfc9958b2c8ad"
+            ),
+          },
+        },
+        {
+          $lookup:
+            /**
+             * from: The target collection.
+             * localField: The local join field.
+             * foreignField: The target join field.
+             * as: The name for the results.
+             * pipeline: Optional pipeline to run on the foreign collection.
+             * let: Optional variables to use in the pipeline field stages.
+             */
+            {
+              from: "branch",
+              localField: "branch",
+              foreignField: "_id",
+              as: "branchInfo",
+            },
+        },
+        {
+          $unwind:
+            /**
+             * path: Path to the array field.
+             * includeArrayIndex: Optional name for index.
+             * preserveNullAndEmptyArrays: Optional
+             *   toggle to unwind null and empty values.
+             */
+            {
+              path: "$branchInfo",
+            },
+        },
+        {
+          $project:
+            /**
+             * specifications: The fields to
+             *   include or exclude.
+             */
+            {
+              branchName: "$branchInfo.name",
+              amount: 1,
+              serialno: 1,
+              status: {
+                $cond: [
+                  "$status",
+                  "active",
+                  "not-active",
+                ],
+              },
+              assigned: {
+                $cond: [
+                  "$assigned",
+                  "assigned",
+                  "not-assigned",
+                ],
+              },
+            },
+        },
+        {
+          $skip: 0,
+        },
+        {
+          $limit: 2,
+        },
+      ],
+      count: [
+        {
+          $count: "count",
+        },
+      ],
+    },
+  },
+]
+
+
+
+var objectIDFromHex = func(hex string) primitive.ObjectID {
+  objectID, err := primitive.ObjectIDFromHex(hex)
+  if err != nil {
+    log.Fatal(err)
+  }
+  return objectID
+}
+
+bson.A{
+    bson.D{
+        {"$facet",
+            bson.D{
+                {"data",
+                    bson.A{
+                        bson.D{{"$match", bson.D{{"company", objectIDFromHex("662b78629aacfc9958b2c8ad")}}}},
+                        bson.D{
+                            {"$lookup",
+                                bson.D{
+                                    {"from", "branch"},
+                                    {"localField", "branch"},
+                                    {"foreignField", "_id"},
+                                    {"as", "branchInfo"},
+                                },
+                            },
+                        },
+                        bson.D{{"$unwind", bson.D{{"path", "$branchInfo"}}}},
+                        bson.D{
+                            {"$project",
+                                bson.D{
+                                    {"branchName", "$branchInfo.name"},
+                                    {"amount", 1},
+                                    {"serialno", 1},
+                                    {"status",
+                                        bson.D{
+                                            {"$cond",
+                                                bson.A{
+                                                    "$status",
+                                                    "active",
+                                                    "not-active",
+                                                },
+                                            },
+                                        },
+                                    },
+                                    {"assigned",
+                                        bson.D{
+                                            {"$cond",
+                                                bson.A{
+                                                    "$assigned",
+                                                    "assigned",
+                                                    "not-assigned",
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        bson.D{{"$skip", 0}},
+                        bson.D{{"$limit", 2}},
+                    },
+                },
+                {"count",
+                    bson.A{
+                        bson.D{{"$count", "count"}},
+                    },
+                },
+            },
+        },
+    },
+}

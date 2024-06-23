@@ -29,7 +29,7 @@ func FindEmailClient(email string) (model.Client, error) {
 	defer cancel()
 	var data model.Client
 
-	err := Client.FindOne(ctx, bson.D{{Key: "email", Value: email}}).Decode(&data)
+	err := Farmers.FindOne(ctx, bson.D{{Key: "email", Value: email}}).Decode(&data)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return model.Client{}, nil
@@ -64,7 +64,7 @@ func UpdatePasswordClients(userId primitive.ObjectID, hashedPassword string) (mo
 	update := bson.M{"$set": bson.M{"password": hashedPassword, "verified": true}}
 
 	// Update password in the collection
-	_, err := Client.UpdateOne(ctx, filter, update)
+	_, err := Farmers.UpdateOne(ctx, filter, update)
 
 	if err != nil {
 		return model.Client{}, err

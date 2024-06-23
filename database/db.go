@@ -23,6 +23,8 @@ var (
 	Branch            *mongo.Collection
 	Pumps             *mongo.Collection
 	Farmers           *mongo.Collection
+	Package           *mongo.Collection
+	Payment           *mongo.Collection
 )
 
 func InitDatabase() {
@@ -48,4 +50,6 @@ func InitDatabase() {
 	Company = DB.Collection("company")
 	Pumps = DB.Collection("pumps")
 	Farmers = DB.Collection("farmers")
+	Package = DB.Collection("package")
+	Payment = DB.Collection("payment")
 }

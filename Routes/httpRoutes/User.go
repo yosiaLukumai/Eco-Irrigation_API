@@ -14,7 +14,7 @@ func UserRoutes(app *mux.Router) {
 	r.HandleFunc("/register", handlers.SignUp)
 	// r.HandleFunc("/verify/admin/{token}", handlers.VerifyAdmin).Methods(http.MethodGet)
 	// r.HandleFunc("/recover", handlers.RecoverAcc).Methods(http.MethodPost)
-	// r.HandleFunc("/verify/recover/{type}", handlers.VerifyEmail).Methods(http.MethodPost)
+	r.HandleFunc("/verify/email", handlers.VerifyEmail).Methods(http.MethodPost)
 
 	routerA := app.PathPrefix("/users/auth").Subrouter()
 	routerA.Use(middlewares.Auth)

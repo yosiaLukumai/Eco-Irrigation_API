@@ -20,6 +20,48 @@ type Response struct {
 	Data    interface{}
 }
 
+func FindTransactions(w http.ResponseWriter, r *http.Request) {
+	var tableOptions struct {
+		RowsPerPage int16 `json:"rowperpage"   validate:"required"`
+		CurrentPage int16 `json:"currentpage"   validate:"required"`
+		Initial     bool  `json:"initial"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&tableOptions); err != nil {
+		utils.CreateOutput(w, fmt.Errorf("JSON decoding error"), false, nil)
+		return
+	}
+
+	msg, err := utils.ValidateIncoming(tableOptions)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf(msg), false, nil)
+		return
+	}
+
+	skipValue := utils.SkipValue(tableOptions.CurrentPage, tableOptions.RowsPerPage)
+
+	projection := utils.MD("$project", utils.MDs(
+		utils.ME("kit", 1),
+		utils.ME("amount", 1),
+		utils.ME("phone", 1),
+		utils.ME("transactionId", 1),
+		utils.ME("status", utils.MDs(
+			utils.ME("$cond", utils.MA("$status", "success", "pending")),
+		)),
+	))
+
+	pipelineSystems := mongo.Pipeline{
+		utils.FacetCreatorMain(projection, utils.MD("$limit", tableOptions.RowsPerPage), utils.MD("$skip", skipValue)),
+	}
+	data, err := database.FindCollArrayTableMain(database.Payment, pipelineSystems, tableOptions.Initial)
+	if err != nil {
+		fmt.Println(err)
+		utils.CreateOutput(w, fmt.Errorf(" can't find companie's payments"), false, nil)
+		return
+	}
+	utils.CreateOutput(w, fmt.Errorf(""), true, data)
+}
+
 func AddRoleCompany(w http.ResponseWriter, r *http.Request) {
 	var CompanyCredentials struct {
 		CompanyId string   `json:"companyId"  validate:"required"`
@@ -216,11 +258,11 @@ func PaymentCallBack(w http.ResponseWriter, r *http.Request) {
 
 func SavePayement(w http.ResponseWriter, r *http.Request) {
 	var PaymentDetails struct {
-		Kit           string  `json:"kit"`
-		Amount        float64 `json:"amount"`
-		TransactionID string  `json:"transactionId"`
-		Phone         string  `json:"phone"`
-		Provider      string  `json:"provider"`
+		Kit           string  `json:"kit" validate:"required"`
+		Amount        float64 `json:"amount" validate:"required"`
+		TransactionID string  `json:"transactionId" validate:"required"`
+		Phone         string  `json:"phone" validate:"required"`
+		Provider      string  `json:"provider" validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&PaymentDetails); err != nil {
 		utils.CreateOutput(w, fmt.Errorf("JSON decoding error"), false, nil)
@@ -233,7 +275,19 @@ func SavePayement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := model.CreatePayment(PaymentDetails.Kit, PaymentDetails.Amount, PaymentDetails.TransactionID, PaymentDetails.Phone)
+	// check if the kit exists
+	correctID, err := utils.IDHexErr(PaymentDetails.Kit)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf("incorrect kit id"), false, nil)
+		return
+	}
+	_, err = database.FindByID(database.Pumps, correctID)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf("unregistered pump"), false, nil)
+		return
+	}
+
+	data := model.CreatePayment(PaymentDetails.Kit, PaymentDetails.Amount, PaymentDetails.TransactionID, PaymentDetails.Provider, PaymentDetails.Phone)
 
 	_, err = database.InsertOne(database.Payment, data)
 	if err != nil {

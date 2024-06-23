@@ -84,13 +84,14 @@ func main() {
 	httproutes.CompanyRoutes(app)
 	httproutes.UserRoutes(app)
 	httproutes.ClientRoutes(app)
+	httproutes.PaymentRoutes(app)
 
 	http.HandleFunc("/swift", handleWebSocket)
 
 	http.Handle("/", app)
 	// adding cors for (CROSS ORIGIN)
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{"http://localhost:5173", "*"},
 		AllowCredentials: true,
 		// Debug:            true,
 	})

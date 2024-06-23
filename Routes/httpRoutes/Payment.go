@@ -10,6 +10,7 @@ import (
 
 func PaymentRoutes(app *mux.Router) {
 	r := app.PathPrefix("/payment").Subrouter()
-	r.HandleFunc("/payment", handlers.SavePayement).Methods(http.MethodPost)
+	r.HandleFunc("/save", handlers.SavePayement).Methods(http.MethodPost)
 	r.HandleFunc("/callBack", handlers.PaymentCallBack).Methods(http.MethodPost)
+	r.HandleFunc("/find/transaction", handlers.FindTransactions).Methods(http.MethodPost)
 }

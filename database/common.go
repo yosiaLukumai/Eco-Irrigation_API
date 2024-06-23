@@ -211,7 +211,7 @@ func FindByID(col *mongo.Collection, id primitive.ObjectID) (interface{}, error)
 	defer cancel()
 	filter := bson.M{"_id": bson.M{"$eq": id}}
 	var data interface{}
-	err := Company.FindOne(ctx, filter).Decode(&data)
+	err := Pumps.FindOne(ctx, filter).Decode(&data)
 	if err != nil {
 		return nil, err
 	}

@@ -25,6 +25,14 @@ func IDHex(id string) primitive.ObjectID {
 	return idp
 }
 
+func IDHexErr(id string) (primitive.ObjectID, error) {
+	idp, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return idp, err
+	}
+	return idp, nil
+}
+
 // func FacetCreator() bson.A {
 // 	return bson.A{
 // 		bson.D{{"$facet", }}}

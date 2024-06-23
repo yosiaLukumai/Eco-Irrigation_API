@@ -34,11 +34,11 @@ func NewVerificationObject(user User, randomData string) EmailVerification {
 
 }
 
-func NewVerificationObjectClient(client Client, randomData string) EmailVerification {
+func NewVerificationObjectClient(id primitive.ObjectID, email string, randomData string) EmailVerification {
 	return EmailVerification{
 		ID:        primitive.NewObjectID(),
-		UserID:    client.ID,
-		Email:     client.Email,
+		UserID:    id,
+		Email:     email,
 		Used:      false,
 		Type:      "client",
 		Token:     randomData,

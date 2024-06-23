@@ -19,61 +19,47 @@ func RegisterClient(w http.ResponseWriter, r *http.Request) {
 		FirstName string `json:"firstname" validate:"required"`
 		LastName  string `json:"lastname" validate:"required"`
 		Email     string `json:"email" validate:"required"`
-		Nida      string `json:"nida" validate:"required"`
-		Contacts  string `json:"contacts" validate:"required"`
-		MeterID   string `json:"meterID" validate:"required"`
-		CompanyID string `json:"companyId" validate:"required"`
+		Phone     string `json:"phone" validate:"required"`
+		PumpID    string `json:"pumpid" validate:"required"`
+		Packae    string `json:"package" validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&ClientData); err != nil {
 		utils.CreateOutput(w, fmt.Errorf("JSON decoding error"), false, nil)
 		return
 	}
 
-	msg, err := utils.ValidateIncoming(ClientData)
-	if err != nil {
-		utils.CreateOutput(w, fmt.Errorf(msg), false, nil)
-		return
-	}
-	// validate the email and companyID if they exists
-	comp, err := database.FindCompany(utils.IDHex(ClientData.CompanyID))
-	if err != nil {
-		utils.CreateOutput(w, fmt.Errorf("no such company"), false, nil)
-		return
-	}
 	client, err := database.FindEmailClient(ClientData.Email)
 	if err != nil {
 		utils.CreateOutput(w, fmt.Errorf("failed to check the email"), false, nil)
 		return
 	}
-
 	if client.Email == ClientData.Email {
 		utils.CreateOutput(w, fmt.Errorf("sorry email taken"), false, nil)
 		return
 	}
 
-	newClient := model.NewClient(comp.ID, ClientData.FirstName, ClientData.LastName, ClientData.Email, ClientData.Nida, ClientData.Contacts, utils.IDHex(ClientData.MeterID))
-
+	newClient := model.CreateNewFarmer(ClientData.Email, ClientData.Packae, ClientData.FirstName, ClientData.LastName, ClientData.Phone)
 	randomData, err := utils.GenerateRandomStr32(32)
 	if err != nil {
 		utils.CreateOutput(w, fmt.Errorf("FAILED to send you verification Email visit recovery center"), false, nil)
 		return
 	}
-	verificationDetails := model.NewVerificationObjectClient(newClient, randomData)
+	verificationDetails := model.NewVerificationObjectClient(newClient.ID, ClientData.Email, randomData)
 	_, err = database.SaveVerification(verificationDetails)
 	if err != nil {
 		utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit clients recovery center"), false, nil)
 		return
 	}
 	// save the client
-	_, err = database.InsertOne(database.Client, newClient)
+	_, err = database.InsertOne(database.Farmers, newClient)
 	if err != nil {
 		utils.CreateOutput(w, fmt.Errorf("failed to insert the client"), false, nil)
 		return
 	}
 
 	//update the field of the meter being assigned....
-	filter := bson.M{"_id": utils.IDHex(ClientData.MeterID)}
-	update := bson.M{"$set": bson.M{"assigned": true}}
+	filter := bson.M{"_id": utils.IDHex(ClientData.PumpID)}
+	update := bson.M{"$set": bson.M{"assigned": true, "farmer": newClient.ID}}
 	succes, err := database.UpdateOne(database.Pumps, filter, update)
 	if err != nil || !succes {
 		utils.CreateOutput(w, fmt.Errorf("FAILED to update the Meter assignement Go recovery page"), false, nil)
@@ -81,7 +67,7 @@ func RegisterClient(w http.ResponseWriter, r *http.Request) {
 	}
 	// sending the client verification Email
 	err, success := helpers.SendEmailVerificationClient(utils.VerificationEmailDataTemplate{
-		AppName:    comp.Name,
+		AppName:    os.Getenv("SENDER_APP"),
 		VerifyLink: fmt.Sprintf("%s/verify/client/%s", os.Getenv("UI_URL"), randomData),
 		Name:       ClientData.FirstName + "-" + ClientData.LastName,
 		Year:       utils.Year(),
@@ -126,7 +112,6 @@ func RegisterClient(w http.ResponseWriter, r *http.Request) {
 // }
 
 func FindFarmers(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Hitted????")
 	var tableOptions struct {
 		RowsPerPage int16 `json:"rowperpage"   validate:"required"`
 		CurrentPage int16 `json:"currentpage"   validate:"required"`
@@ -153,18 +138,27 @@ func FindFarmers(w http.ResponseWriter, r *http.Request) {
 		utils.ME("as", "pumpD"),
 	))
 
+	lookUp2 := utils.MD("$lookup", utils.MDs(
+		utils.ME("from", "package"),
+		utils.ME("localField", "package"),
+		utils.ME("foreignField", "_id"),
+		utils.ME("as", "packageInfo"),
+	))
+
 	unwind := utils.MD("$unwind", utils.MDs(utils.ME("path", "$pumpD")))
+	unwind2 := utils.MD("$unwind", utils.MDs(utils.ME("path", "$packageInfo")))
 	projection := utils.MD("$project", utils.MDs(
 		utils.ME("pumpID", "$pumpD._id"),
 		utils.ME("balance", "$pumpD.balance"),
 		utils.ME("email", 1),
 		utils.ME("phone", 1),
+		utils.ME("package", "$packageInfo.name"),
 	))
 
 	pipelineClient := mongo.Pipeline{
-		utils.FacetCreatorMain(lookup, unwind, projection, utils.MD("$limit", tableOptions.RowsPerPage), utils.MD("$skip", skipValue)),
+		utils.FacetCreatorMain(lookup, unwind, lookUp2, unwind2, projection, utils.MD("$limit", tableOptions.RowsPerPage), utils.MD("$skip", skipValue)),
 	}
-	data, err := database.FindCollArrayTableMain(database.Client, pipelineClient, tableOptions.Initial)
+	data, err := database.FindCollArrayTableMain(database.Farmers, pipelineClient, tableOptions.Initial)
 	if err != nil {
 		fmt.Println(err)
 		utils.CreateOutput(w, fmt.Errorf(" can't find companie's meter"), false, nil)

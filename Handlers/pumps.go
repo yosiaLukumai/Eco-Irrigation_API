@@ -62,6 +62,31 @@ func AddRoleCompany(w http.ResponseWriter, r *http.Request) {
 	utils.CreateOutput(w, fmt.Errorf(""), true, nil)
 }
 
+func AddPackage(w http.ResponseWriter, r *http.Request) {
+	var PackageDetails struct {
+		Name          string  `json:"name" bson:"name" validate:"required"`
+		AmountPerDay  float64 `json:"amountperday" bson:"amountperday" validate:"required"`
+		InitialAmount float64 `json:"initialamount" validate:"required"`
+		PowerSize     float64 `json:"powersize" bson:"powersize" validate:"required"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&PackageDetails); err != nil {
+		utils.CreateOutput(w, fmt.Errorf("JSON decoding error"), false, nil)
+		return
+	}
+	msg, err := utils.ValidateIncoming(PackageDetails)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf(msg), false, nil)
+		return
+	}
+	data := model.CreatePackage(PackageDetails.Name, PackageDetails.AmountPerDay, PackageDetails.InitialAmount, PackageDetails.PowerSize)
+	_, err = database.InsertOne(database.Package, data)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf("failed to insert the package"), false, nil)
+		return
+	}
+	utils.CreateOutput(w, fmt.Errorf(""), true, nil)
+}
+
 func AddPump(w http.ResponseWriter, r *http.Request) {
 	var PumpDetails struct {
 		// FarmerID  string  `json:"farmerID"  validate:"required"`
@@ -82,7 +107,7 @@ func AddPump(w http.ResponseWriter, r *http.Request) {
 	data := model.CreateNewPump(PumpDetails.Discharge, PumpDetails.Head)
 	_, err = database.InsertOne(database.Pumps, data)
 	if err != nil {
-		utils.CreateOutput(w, fmt.Errorf("failed to insert the system"), false, nil)
+		utils.CreateOutput(w, fmt.Errorf("failed to insert the kit"), false, nil)
 		return
 	}
 
@@ -140,6 +165,23 @@ func FindSystems(w http.ResponseWriter, r *http.Request) {
 	utils.CreateOutput(w, fmt.Errorf(""), true, data)
 }
 
+func FindPackagesNames(w http.ResponseWriter, r *http.Request) {
+	sort := bson.D{{"$sort", bson.D{{"createdat", -1}}}}
+	projection := bson.D{
+		{"$project",
+			bson.D{
+				{"_id", 1},
+				{"name", 1},
+			}}}
+	filterA := utils.AggregationFilter(sort, projection)
+	result, err := database.FindCollReturnArray(database.Package, filterA)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf(" can't find packages"), false, nil)
+		return
+	}
+	utils.CreateOutput(w, fmt.Errorf(""), true, result)
+}
+
 func FindUnassigned(w http.ResponseWriter, r *http.Request) {
 	filter := bson.D{{"$match", bson.D{{"assigned", false}}}}
 	sort := bson.D{{"$sort", bson.D{{"createdat", -1}}}}
@@ -156,7 +198,6 @@ func FindUnassigned(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.CreateOutput(w, fmt.Errorf(""), true, result)
-
 }
 
 func PaymentCallBack(w http.ResponseWriter, r *http.Request) {
@@ -171,4 +212,34 @@ func PaymentCallBack(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.CreateOutput(w, fmt.Errorf(""), true, "")
+}
+
+func SavePayement(w http.ResponseWriter, r *http.Request) {
+	var PaymentDetails struct {
+		Kit           string  `json:"kit"`
+		Amount        float64 `json:"amount"`
+		TransactionID string  `json:"transactionId"`
+		Phone         string  `json:"phone"`
+		Provider      string  `json:"provider"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&PaymentDetails); err != nil {
+		utils.CreateOutput(w, fmt.Errorf("JSON decoding error"), false, nil)
+		return
+	}
+
+	msg, err := utils.ValidateIncoming(PaymentDetails)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf(msg), false, nil)
+		return
+	}
+
+	data := model.CreatePayment(PaymentDetails.Kit, PaymentDetails.Amount, PaymentDetails.TransactionID, PaymentDetails.Phone)
+
+	_, err = database.InsertOne(database.Payment, data)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf("failed to insert payment entry"), false, nil)
+		return
+	}
+
+	utils.CreateOutput(w, fmt.Errorf(""), true, nil)
 }

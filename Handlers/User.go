@@ -111,110 +111,110 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 // Password forgetting or having trouble logging in
-func RecoverAcc(w http.ResponseWriter, r *http.Request) {
-	var UserCredentials struct {
-		Email string `json:"email" validate:"required,email"`
-		Type  string `json:"type" validate:"required"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&UserCredentials); err != nil {
-		utils.CreateOutput(w, fmt.Errorf("JSON decoding error"), false, nil)
-		return
-	}
-	msg, err := utils.ValidateIncoming(UserCredentials)
-	if err != nil {
-		utils.CreateOutput(w, fmt.Errorf(msg), false, nil)
-		return
-	}
-	// var newData model.User
-	if UserCredentials.Type == "user" {
-		user, err := database.FindEmail(UserCredentials.Email)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("sorry you don't have an account"), false, nil)
-			return
-		}
+// func RecoverAcc(w http.ResponseWriter, r *http.Request) {
+// 	var UserCredentials struct {
+// 		Email string `json:"email" validate:"required,email"`
+// 		Type  string `json:"type" validate:"required"`
+// 	}
+// 	if err := json.NewDecoder(r.Body).Decode(&UserCredentials); err != nil {
+// 		utils.CreateOutput(w, fmt.Errorf("JSON decoding error"), false, nil)
+// 		return
+// 	}
+// 	msg, err := utils.ValidateIncoming(UserCredentials)
+// 	if err != nil {
+// 		utils.CreateOutput(w, fmt.Errorf(msg), false, nil)
+// 		return
+// 	}
+// 	// var newData model.User
+// 	if UserCredentials.Type == "user" {
+// 		user, err := database.FindEmail(UserCredentials.Email)
+// 		if err != nil {
+// 			utils.CreateOutput(w, fmt.Errorf("sorry you don't have an account"), false, nil)
+// 			return
+// 		}
 
-		randomData, err := utils.GenerateRandomStr32(32)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to send you verification Email visit recovery center"), false, nil)
-			return
-		}
+// 		randomData, err := utils.GenerateRandomStr32(32)
+// 		if err != nil {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to send you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
 
-		verificationDetails := model.NewVerificationObject(user, randomData)
-		_, err = database.SaveVerification(verificationDetails)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
-			return
-		}
+// 		verificationDetails := model.NewVerificationObject(user, randomData)
+// 		_, err = database.SaveVerification(verificationDetails)
+// 		if err != nil {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
 
-		// save that the user is now not verified
-		filter := bson.M{"_id": user.ID}
-		update := bson.M{"$set": bson.M{"verified": false}}
-		succes, err := database.UpdateOne(database.User, filter, update)
-		if err != nil || !succes {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
-			return
-		}
-		err, success := helpers.SendRecoverEmail(utils.VerificationEmailDataTemplate{
-			AppName:    "AFM Technologies",
-			VerifyLink: fmt.Sprintf("%s/recover/account/%s", os.Getenv("UI_URL"), randomData),
-			Name:       user.FirstName + "-" + user.LastName,
-			Year:       time.Now().Year(),
-		}, user.Email)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
-			return
-		}
-		if !success {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
-			return
-		}
-		utils.CreateOutput(w, fmt.Errorf(""), true, nil)
-	} else {
-		client, err := database.FindEmailClient(UserCredentials.Email)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("sorry you don't have an account"), false, nil)
-			return
-		}
+// 		// save that the user is now not verified
+// 		filter := bson.M{"_id": user.ID}
+// 		update := bson.M{"$set": bson.M{"verified": false}}
+// 		succes, err := database.UpdateOne(database.User, filter, update)
+// 		if err != nil || !succes {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
+// 		err, success := helpers.SendRecoverEmail(utils.VerificationEmailDataTemplate{
+// 			AppName:    "AFM Technologies",
+// 			VerifyLink: fmt.Sprintf("%s/recover/account/%s", os.Getenv("UI_URL"), randomData),
+// 			Name:       user.FirstName + "-" + user.LastName,
+// 			Year:       time.Now().Year(),
+// 		}, user.Email)
+// 		if err != nil {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
+// 		if !success {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
+// 		utils.CreateOutput(w, fmt.Errorf(""), true, nil)
+// 	} else {
+// 		client, err := database.FindEmailClient(UserCredentials.Email)
+// 		if err != nil {
+// 			utils.CreateOutput(w, fmt.Errorf("sorry you don't have an account"), false, nil)
+// 			return
+// 		}
 
-		randomData, err := utils.GenerateRandomStr32(32)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to send you verification Email visit recovery center"), false, nil)
-			return
-		}
+// 		randomData, err := utils.GenerateRandomStr32(32)
+// 		if err != nil {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to send you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
 
-		verificationDetails := model.NewVerificationObjectClient(client, randomData)
-		_, err = database.SaveVerification(verificationDetails)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
-			return
-		}
+// 		verificationDetails := model.NewVerificationObjectClient(client, randomData)
+// 		_, err = database.SaveVerification(verificationDetails)
+// 		if err != nil {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
 
-		// save that the user is now not verified
+// 		// save that the user is now not verified
 
-		filter := bson.M{"_id": client.ID}
-		update := bson.M{"$set": bson.M{"verified": false}}
-		succes, err := database.UpdateOne(database.Client, filter, update)
-		if err != nil || !succes {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
-			return
-		}
-		err, success := helpers.SendRecoverEmailClient(utils.VerificationEmailDataTemplate{
-			AppName:    "AFM Technologies",
-			VerifyLink: fmt.Sprintf("%s/recover/account/client/%s", os.Getenv("UI_URL"), randomData),
-			Name:       client.Name,
-			Year:       time.Now().Year(),
-		}, client.Email)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
-			return
-		}
-		if !success {
-			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
-			return
-		}
-		utils.CreateOutput(w, fmt.Errorf(""), true, nil)
-	}
-}
+// 		filter := bson.M{"_id": client.ID}
+// 		update := bson.M{"$set": bson.M{"verified": false}}
+// 		succes, err := database.UpdateOne(database.Client, filter, update)
+// 		if err != nil || !succes {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
+// 		err, success := helpers.SendRecoverEmailClient(utils.VerificationEmailDataTemplate{
+// 			AppName:    "AFM Technologies",
+// 			VerifyLink: fmt.Sprintf("%s/recover/account/client/%s", os.Getenv("UI_URL"), randomData),
+// 			Name:       client.Name,
+// 			Year:       time.Now().Year(),
+// 		}, client.Email)
+// 		if err != nil {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
+// 		if !success {
+// 			utils.CreateOutput(w, fmt.Errorf("FAILED to save you verification Email visit recovery center"), false, nil)
+// 			return
+// 		}
+// 		utils.CreateOutput(w, fmt.Errorf(""), true, nil)
+// 	}
+// }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var UserCredentials struct {
@@ -333,11 +333,11 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		_, err = database.UpdatePasswordClients(user.UserID, hashedPassword)
-		if err != nil {
-			utils.CreateOutput(w, fmt.Errorf("failed to hash password"), false, nil)
-			return
-		}
+	_, err = database.UpdatePasswordClients(user.UserID, hashedPassword)
+	if err != nil {
+		utils.CreateOutput(w, fmt.Errorf("failed to hash password"), false, nil)
+		return
+	}
 	}
 	// update the key object
 	_, err = database.UpdateVerification(user.ID)
